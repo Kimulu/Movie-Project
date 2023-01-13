@@ -1,0 +1,17 @@
+
+{% import "bootstrap/wtf.html" as wtf %}
+
+
+ 
+
+{% include "header.html" %}
+
+<div class="content">
+    <h1 class="heading">Create a List</h1>
+    <h2>This is where all your movies will be stored,</h2>
+     <h2>until you create another new list</h2>
+  
+    {{ wtf.quick_form(form, novalidate=True) }}
+  
+</div>
+{% include "footer.html"%}

@@ -1,0 +1,35 @@
+{% include "header.html" %}
+
+  
+
+  <div class="container-fluid">
+    
+    <div class="row">
+      {% for result in result %}
+      <div class="col-lg-2">
+       
+        <div class="card" style="padding-top:4px;">
+        <img src="{{result.img_url}}" class="card-img-top" alt="...">
+        <div class="card-body">
+          <a class="card-text" href="">{{ result.category}} list</a>
+          <div>
+            <a href="#" class="button">Update</a>
+          <a href="#" class="button delete-button">Delete</a>
+          <a href="#" class="button delete-button">Description</a>
+       
+        
+      </div>
+      </div>
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+    
+    </div>
+
+
+  
+
+
+
+{% include "footer.html" %}
