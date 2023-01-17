@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-
-
 <html lang="en">
-
-
 {% include 'header.html'%}
   
 <body>
@@ -47,28 +42,28 @@
       </nav>
 
 
-      <div class="container">
-        <div class="filter-div">   
-          <form action="/category" method="get">
-            <label for="category">Choose a category:</label>
-              <select id="category" name="category">
-                <option value="horror">horror</option>
-                <option value="action">action</option>
-      
-      
-              </select> 
-            <button type="submit">Filter</button>
-        </form>
-        </div>
-      
-      </div>
+<div class="container">
+  <div class="filter-div">   
+    <form action="/category" method="get">
+      <label for="category">Choose a category:</label>
+        <select id="category" name="category">
+          <option value="horror">horror</option>
+          <option value="action">action</option>
+
+
+        </select> 
+      <button type="submit">Filter</button>
+  </form>
+  </div>
+
+</div>
 
 
 <div class="container">
     <div class="row">
       <div class="col-lg-8">
         <div class="container" style="padding-top:50px;">
-   
+
           <div class="row">
             {% for category in category1 %}
             <div class="col-lg-4">
@@ -92,6 +87,40 @@
             </div>
             {% endfor %}
           </div>
+   
+          <div class="row">
+            {% if  not current_user.is_authenticated: %}
+            <h5><a href="">All your favourite movies go here</a></h5>
+            <h6><a href="">Add movies to this section</a></h6>
+            <h6><a  href="{{url_for('login')}}">Login</a></h6>
+            <h6><a href="{{url_for('register')}}">Register</a></h6>
+            {% else %}
+            {% for movie in movies %}
+            <div class="col-lg-4 col-md-4 col-sm-4">
+              
+             {% if movie.author_id == current_user.id %}
+              <div class="card" style="padding-top:4px;">
+                <img src="{{movie.img_url}}" class="card-img-top" alt="...">
+                <div class="card-body">
+                  <a class="card-text" href="{{ url_for('find_category', category=movie.category) }}">Category: {{ movie.category}}</a>
+                  <div>
+                    <a href="{{ url_for('rate_movie', id=movie.id) }}" class="button">Update</a>
+                  <a href="{{ url_for('delete_movie', id=movie.id) }}" class="button delete-button">Delete</a>
+                  <a href="{{ url_for('delete_movie', id=movie.id) }}" class="button delete-button">Description</a>
+                  
+                  </div>
+                  
+            
+                </div>
+              </div>
+              {% endif %}
+             
+                    
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+          </div>
             
           </div>
       </div>
@@ -102,7 +131,7 @@
         <h6><a href="">Add movies to your list</a></h6>
   
         {%else%}
-        {%for list in all_list%}
+        {%for list in list%}
         {% if list==[] %}
         <a href="{{url_for('create_list')}}">Create List</a>
         {%endif%}
@@ -114,6 +143,7 @@
         {% endif %}
     {%endfor%}
     {%endif%}
+    <a href="{{url_for('create_list')}}">Create  a new List</a>
       </div>
   
     </div>

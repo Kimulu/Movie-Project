@@ -10,10 +10,17 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import RegisterForm,LoginForm , RateMovieForm,NewMovieForm,CreateListForm
 from flask_gravatar import Gravatar
 import requests
+from datetime import date, datetime
 
 MOVIE_DB_API_KEY = "686548ae8bdc2048ba00af9d9df322d2"
 MOVIE_DB_INFO_URL = "https://api.themoviedb.org/3/movie"
 MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
+YOUR_ACCESS_KEY = "92a3f583a5fac57093ba6878c54a7268" 
+
+
+
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap(app)
@@ -78,16 +85,126 @@ class List(db.Model):
      #***************Parent Relationship*************#
     movies = relationship("Movie", back_populates="parent_list")
 
+class NewsArticles(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    title=db.Column(db.String(250))
+    image = db.Column(db.String(250))
+    description = db.Column(db.String(250))
+    url=db.Column(db.String(250))
+    author=db.Column(db.String(250))
+
+class Popular_Movies(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    title=db.Column(db.String(250))
+    image = db.Column(db.String(250))
+    description = db.Column(db.String(250))
+    numberOfEpisodes = db.Column(db.String(250))
+  
+
 db.create_all()
+
+
+class FindMovieForm(FlaskForm):
+    title = StringField("Movie Title", validators=[DataRequired()])
+    category= SelectField('Movie Category', choices=[('horror', 'horror'), ('action', 'Action'), ('Comedy', 'Comedy')],validators=[DataRequired()])
+    submit = SubmitField("Add Movie")
+
+class FindCategoryForm(FlaskForm):
+    category= SelectField('Movie Category', choices=[('horror', 'horror'), ('action', 'Action'), ('Comedy', 'Comedy')],validators=[DataRequired()])
+    submit = SubmitField("Filter")
+
+today = date.today()
+now = datetime.now().hour
+news_list = []
+news_parameters= {
+    "access_key" : YOUR_ACCESS_KEY,
+    "languages" : "en",
+    "categories" : "entertainment","-sports"
+    "date":f"{today}",
+
+}
+if now==20:
+    response = requests.get("http://api.mediastack.com/v1/news", params=news_parameters)
+    news_data = response.json()
+    news_list = news_data["data"][::5]
+
+
+for i in news_list:
+    if now == 20:
+        new_article = NewsArticles(    
+                title=i["title"],
+                description =i["description"],
+                url = i["url"],
+                image=i["image"],
+                author = i["author"]
+
+            )
+        db.session.add(new_article)
+        db.session.commit()
+
+#code for getting popular tv shows and storing them in the database
+url = "https://imdb8.p.rapidapi.com/title/get-most-popular-tv-shows"
+
+querystring = {"homeCountry":"US","purchaseCountry":"US","currentCountry":"US"}
+
+headers = {
+	"X-RapidAPI-Key": "b3edda5913mshcc905235f1241e8p132e18jsne2ffb0d927d6",
+	"X-RapidAPI-Host": "imdb8.p.rapidapi.com"
+}
+if now ==20:
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    data =response.json()
+    new_data = data[0:6]
+    empty_data = []
+    for data in new_data:
+        stripped_data = data.strip("/title/ /")
+        empty_data.append(stripped_data)
+
+
+#finding details of the tv shows that are popular
+if now == 20:
+    for i in empty_data:    
+        url = "https://imdb8.p.rapidapi.com/title/find"
+
+        querystring = {"q":f"tt{i}"}
+
+        headers = {
+	        "X-RapidAPI-Key": "b3edda5913mshcc905235f1241e8p132e18jsne2ffb0d927d6",
+	        "X-RapidAPI-Host": "imdb8.p.rapidapi.com"
+        }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        data = response.json()
+        tv_news=data["results"]
+        tv_data = tv_news[0]
+            #print(tv_data["image"]["url"])
+        new_tvShow = Popular_Movies(    
+                title=tv_data["title"],
+                image=tv_data["image"]["url"],
+                numberOfEpisodes =tv_data["numberOfEpisodes"]
+            )
+        db.session.add(new_tvShow)
+        db.session.commit()
+
+        
 
 
 @app.route("/")
 def home():
-    #This line creates a list of all the movies sorted by rating
+    news = NewsArticles.query.all()
+    popular = Popular_Movies.query.all()
+    new_popular = popular[0:3]
+    next_popular = popular[3:7]
+
+    return render_template("index.html",popular=popular,news=news,new_popular=new_popular,next_popular=next_popular)
+
+
+@app.route("/watchlist",methods=["GET", "POST"])
+def watchlist(): 
     my_movie_data = Movie.query.all()
     all_movies=my_movie_data[::-1]
     all_list=List.query.all()
-    return render_template("index.html", movies=all_movies,list=all_list)
+    return render_template("watchlist.html",movies=all_movies,list=all_list)
 
 @app.route('/show_list/<int:list_id>',methods=["GET", "POST"])
 def show_list(list_id):
@@ -161,10 +278,7 @@ def delete_movie():
     db.session.commit()
     return redirect(url_for('home'))
 
-class FindMovieForm(FlaskForm):
-    title = StringField("Movie Title", validators=[DataRequired()])
-    category= SelectField('Movie Category', choices=[('horror', 'horror'), ('action', 'Action'), ('Comedy', 'Comedy')],validators=[DataRequired()])
-    submit = SubmitField("Add Movie")
+
 
 @app.route("/create_list" ,methods=["GET", "POST"])
 def create_list():
@@ -179,10 +293,6 @@ def create_list():
         return redirect(url_for("show_all_list"))
     return render_template("create_list.html", form=form)
 
-@app.route("/list", methods=["GET", "POST"])
-def show_all_list():
-    all_list= List.query.all()
-    return render_template("list.html", list=all_list, current_user=current_user)
 
 @app.route("/delete_list", methods=["GET", "POST"])
 def delete_list():
@@ -242,7 +352,18 @@ def find_movie(list_id):
 def find_category():
     category = request.args.get("category")
     result = Movie.query.filter(Movie.category==category).all()
-    return render_template("category.html", category1=result)
+    all_list=List.query.all()
+
+    return render_template("category.html", category1=result, all_list = all_list)
+
+@app.route("/category", methods=["GET", "POST"])
+def filter_category():
+    name = request.args.get("category")
+    result = Movie.query.filter(Movie.category==name).all()
+    all_list=List.query.all()
+
+    return render_template("category.html",category1=result,all_list=all_list)
+
 
 
 
