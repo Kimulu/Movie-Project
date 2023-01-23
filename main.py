@@ -1,8 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, request
+import smtplib
+from flask import Flask, flash, render_template, redirect, url_for, request
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField,SelectField
+from wtforms import StringField, SubmitField,SelectField,TextAreaField
 from wtforms.validators import DataRequired
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import relationship
@@ -11,11 +12,12 @@ from forms import RegisterForm,LoginForm , RateMovieForm,NewMovieForm,CreateList
 from flask_gravatar import Gravatar
 import requests
 from datetime import date, datetime
-
+import os
 MOVIE_DB_API_KEY = "686548ae8bdc2048ba00af9d9df322d2"
 MOVIE_DB_INFO_URL = "https://api.themoviedb.org/3/movie"
 MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
-YOUR_ACCESS_KEY = "92a3f583a5fac57093ba6878c54a7268" 
+YOUR_ACCESS_KEY = "92a3f583a5fac57093ba6878c54a7268"
+Rapid_API_KEY = os.environ.get("RAPI-KEY") 
 
 
 
@@ -99,6 +101,13 @@ class Popular_Movies(db.Model):
     image = db.Column(db.String(250))
     description = db.Column(db.String(250))
     numberOfEpisodes = db.Column(db.String(250))
+
+class Reviews(db.Model):
+    id =db.Column(db.Integer,primary_key=True)
+    image = db.Column(db.String(250))
+    review_text=db.Column(db.String(250))
+    author=db.Column(db.String(250))
+    reviewTitle =db.Column(db.String(250))
   
 
 db.create_all()
@@ -112,6 +121,14 @@ class FindMovieForm(FlaskForm):
 class FindCategoryForm(FlaskForm):
     category= SelectField('Movie Category', choices=[('horror', 'horror'), ('action', 'Action'), ('Comedy', 'Comedy')],validators=[DataRequired()])
     submit = SubmitField("Filter")
+
+
+class ContactForm(FlaskForm):
+    Name=StringField("Name", validators=[DataRequired()])
+    Email=StringField("Email", validators=[DataRequired()])
+    Phone=StringField("Phone", validators=[DataRequired()])
+    Message=TextAreaField("Message", validators=[DataRequired()])
+    submit = SubmitField("Submit Message")
 
 today = date.today()
 now = datetime.now().hour
@@ -151,7 +168,7 @@ headers = {
 	"X-RapidAPI-Key": "b3edda5913mshcc905235f1241e8p132e18jsne2ffb0d927d6",
 	"X-RapidAPI-Host": "imdb8.p.rapidapi.com"
 }
-if now ==20:
+if now ==16:
     response = requests.request("GET", url, headers=headers, params=querystring)
     data =response.json()
     new_data = data[0:6]
@@ -162,7 +179,7 @@ if now ==20:
 
 
 #finding details of the tv shows that are popular
-if now == 20:
+if now == 16:
     for i in empty_data:    
         url = "https://imdb8.p.rapidapi.com/title/find"
 
@@ -187,16 +204,66 @@ if now == 20:
         db.session.commit()
 
         
+url = "https://imdb8.p.rapidapi.com/title/get-most-popular-tv-shows"
+
+querystring = {"homeCountry":"US","purchaseCountry":"US","currentCountry":"US"}
+
+headers = {
+	"X-RapidAPI-Key": "b3edda5913mshcc905235f1241e8p132e18jsne2ffb0d927d6",
+	"X-RapidAPI-Host": "imdb8.p.rapidapi.com"
+}
+if now ==16:
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    data =response.json()
+    new_data = data[0:6]
+    empty_data = []
+    for data in new_data:
+        stripped_data = data.strip("/title/ /")
+        empty_data.append(stripped_data)
+
+
+if now == 16:
+    for i in empty_data:   
+         url = "https://imdb8.p.rapidapi.com/title/get-reviews"
+         querystring = {"tconst":f"tt{i}","currentCountry":"US","purchaseCountry":"US"}
+
+         headers = {
+	        "X-RapidAPI-Key": "b3edda5913mshcc905235f1241e8p132e18jsne2ffb0d927d6",
+	        "X-RapidAPI-Host": "imdb8.p.rapidapi.com"
+                    }
+
+         response = requests.request("GET", url, headers=headers, params=querystring)
+         data = response.json()
+
+         new_review = Reviews( 
+           
+            image = data["featuredUserReview"]["base"]["image"]["url"],
+            review_text=data["featuredUserReview"]["review"]["reviewText"],
+            author=data["featuredUserReview"]["review"]["author"]["displayName"],
+            reviewTitle= data["featuredUserReview"]["review"]["reviewTitle"]
+            
+            )
+         db.session.add(new_review)
+         db.session.commit()
 
 
 @app.route("/")
 def home():
     news = NewsArticles.query.all()
     popular = Popular_Movies.query.all()
+    my_movie_data = Movie.query.all()
+    reviews = Reviews.query.all()
+    all_movies=my_movie_data[::-1]
+    first_three_movies = all_movies[0:3]
+    last_three_movies=all_movies[4:7]
     new_popular = popular[0:3]
-    next_popular = popular[3:7]
+    next_popular = popular[4:7]
 
-    return render_template("index.html",popular=popular,news=news,new_popular=new_popular,next_popular=next_popular)
+    return render_template(
+    "index.html",popular=popular,news=news,new_popular=new_popular,next_popular=next_popular,
+     movies=all_movies,first_three_movies=first_three_movies,
+     last_three_movies=last_three_movies,reviews=reviews
+     )
 
 
 @app.route("/watchlist",methods=["GET", "POST"])
@@ -205,13 +272,6 @@ def watchlist():
     all_movies=my_movie_data[::-1]
     all_list=List.query.all()
     return render_template("watchlist.html",movies=all_movies,list=all_list)
-
-@app.route('/show_list/<int:list_id>',methods=["GET", "POST"])
-def show_list(list_id):
-    requested_list = list_id
-    result = Movie.query.filter(Movie.list_id==requested_list).all()
-    return render_template("det_list.html",result=result)
-
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -247,8 +307,10 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
+        flash('Successfully registered!! ')
+  
         
-        return redirect(url_for("home"))
+        return redirect(url_for("login"))
 
     return render_template("register.html", form=form)
 
@@ -276,7 +338,7 @@ def delete_movie():
     movie_to_delete = Movie.query.get(movie_id)
     db.session.delete(movie_to_delete)
     db.session.commit()
-    return redirect(url_for('home'))
+    return redirect(url_for('watchlist'))
 
 
 
@@ -290,7 +352,7 @@ def create_list():
         )
         db.session.add(new_list)
         db.session.commit()
-        return redirect(url_for("show_all_list"))
+        return redirect(url_for('watchlist'))
     return render_template("create_list.html", form=form)
 
 
@@ -300,7 +362,7 @@ def delete_list():
     list_to_delete = List.query.get(list_id)
     db.session.delete(list_to_delete)
     db.session.commit()
-    return redirect(url_for('home'))
+    return redirect(url_for('watchlist'))
 
 
 @app.route("/add/<int:list_id>", methods=["GET", "POST"])
@@ -364,6 +426,31 @@ def filter_category():
 
     return render_template("category.html",category1=result,all_list=all_list)
 
+
+@app.route("/contact" , methods=["GET", "POST"])
+def contact():
+    form=ContactForm()
+    if form.validate_on_submit():
+        if not current_user.is_authenticated:
+            flash("You need to login or register to send contact messages.")
+            return redirect(url_for("login"))
+        name = form.Name.data
+        email= form.Email.data
+        phone=form.Phone.data
+        message=form.Message.data
+        my_email = "kimulumichael@gmail.com"
+        password = "mbxccnyfiymvmmnv"
+        with smtplib.SMTP("smtp.gmail.com", port=587) as connection:
+            connection.starttls()
+            connection.login(user=my_email, password=password)
+            connection.sendmail(from_addr=my_email,
+                        to_addrs=my_email,
+                        msg=f"{name}{email}{phone}{message}")
+        flash("Message sent successfully!!")
+        
+
+
+    return render_template("contact.html", form=form)
 
 
 

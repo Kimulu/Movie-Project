@@ -8,70 +8,86 @@
   
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color:#54366d;">
-        <div class="container-fluid">
-          <a class="navbar-brand mx-auto" href="{{url_for('home')}}">MovieLists</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
+  <nav class="navbar navbar-expand-lg navbar-light" style="background-color:#54366d;">
+    <div class="container-fluid">
+      <a class="navbar-brand mx-auto" href="{{url_for('home')}}"><img class="img-logo" src="static/images/toxic_databaselogo.PNG"></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="{{url_for('home')}}"> <i class="fa-solid fa-house"></i> Home</a>
+          </li>
           
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto">
-              <li class="nav-item">
-                <a class="nav-link" aria-current="page" href="{{url_for('home')}}">Home</a>
-              </li>
-              
-              <li class="nav-item">
-                <a class="nav-link" aria-current="page" href="{{url_for('home')}}">Movie Reviews</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{url_for('watchlist')}}">Your WatchList</a>
-                
-              </li>
-              {% if  not current_user.is_authenticated: %}
-              <li class="nav-item">
-                <a class="nav-link" aria-current="page" href="{{url_for('login')}}">Login</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{url_for('register')}}">Register</a>
-              </li>
-              {% else %}
-      
-              <li class="nav-item">
-                <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
-              </li>
-              {% endif %}
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-
-      <div class="container">
-        <div class="filter-div">   
-          <form action="/category" method="get">
-            <label for="category">Choose a category:</label>
-              <select id="category" name="category">
-                <option value="horror">horror</option>
-                <option value="action">action</option>
-      
-      
-              </select> 
-            <button type="submit">Filter</button>
-        </form>
-        </div>
-      
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="#reviews"><i class="fa-solid fa-star-half-stroke"></i> Reviews</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('watchlist')}}"><i class="fa-solid fa-clipboard-list"></i> WatchList</a>
+            
+          </li>
+          {% if  not current_user.is_authenticated: %}
+          <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="{{url_for('login')}}"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('register')}}"><i class="fa-solid fa-right-to-bracket"></i> Register</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('contact')}}"><i class="fa-solid fa-address-book"></i> Contact Us</a>
+          </li>
+          {% else %}
+  
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('logout')}}"><i class="fa-solid fa-right-to-bracket"></i>  Logout</a>
+          </li>
+  
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('contact')}}"><i class="fa-solid fa-address-book"></i> Contact Us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{url_for('watchlist')}}"><i class="fa-solid fa-user"></i> {{current_user.name}}</a>
+            
+          </li>
+  
+          {% endif %}
+        </ul>
       </div>
+    </div>
+  </nav>
 
+
+    
 
 <div class="container">
     <div class="row">
       <div class="col-lg-8">
-        <div class="container" style="padding-top:50px;">
-   
+        <div class="container">
+
           <div class="row">
+            <div class="container" style="padding-bottom:2%;padding-top:4%;padding-left:2%; background-color: rgb(223, 217, 217);">
+              <div class="filter-div">   
+                <form action="/category" method="get">
+                  <label for="category">Choose a category:</label>
+                    <select id="category" name="category">
+                      <option value="horror">horror</option>
+                      <option value="action">action</option>
+            
+            
+                    </select> 
+                  <button type="submit" class="btn btn-primary">Filter</button>
+              </form>
+              </div>
+            
+            </div>
+            <hr>
+            
             {% for category in category1 %}
             <div class="col-lg-4">
+              {% if category.author_id == current_user.id %}
+
              
               <div class="card" style="padding-top:4px;">
                 <img src="{{category.img_url}}" class="card-img-top" alt="...">
@@ -87,7 +103,7 @@
             
                 </div>
               </div>
-             
+             {% endif %}
                     
             </div>
             {% endfor %}
@@ -95,7 +111,7 @@
             
           </div>
       </div>
-      <div class="col-lg-4" style="padding-top:50px;padding-left:100px;background-color: antiquewhite;">
+      <div class="col-lg-4" style="padding-top:50px;background-color: antiquewhite;">
         
         {% if  not current_user.is_authenticated: %}
         <h5><a href="">Your lists go here</a></h5>
@@ -107,9 +123,19 @@
         <a href="{{url_for('create_list')}}">Create List</a>
         {%endif%}
          {%if list.author_id == current_user.id %}
-        <h5><a href="{{ url_for('show_list',list_id=list.id) }}">{{list.name}}</a></h5>
-        <h6><a href="{{url_for('add_movie', list_id=list.id)}}">Add movie to this list</a></h6>
-        <h6><a href="{{url_for('delete_list', id=list.id)}}">Delete this list</a></h6>
+         <table>
+          
+          <tr><td class="td1"><h5><a href="{{ url_for('show_list',list_id=list.id) }}"  style="text-decoration:none; color:black;">{{list.name}}</a></h5></td>
+          <td  class="td2"><a href="{{url_for('add_movie', list_id=list.id)}}"style="color:black;"><i class="fa-solid fa-plus"></i> </a></td>
+          <td  class="td2"><a href="{{url_for('delete_list', id=list.id)}}" style="color:black;" ><i class="fa-solid fa-trash"></i></a>
+            
+          </td>
+          </tr>
+          <hr>
+         
+         
+        
+        </table>
         
         {% endif %}
     {%endfor%}

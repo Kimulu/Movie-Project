@@ -8,7 +8,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-light" style="background-color:#54366d;">
   <div class="container-fluid">
-    <a class="navbar-brand mx-auto" href="{{url_for('home')}}">MovieLists</a>
+    <a class="navbar-brand mx-auto" href="{{url_for('home')}}"><img class="img-logo" src="static/images/toxic_databaselogo.PNG"></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -16,37 +16,37 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="{{url_for('home')}}">Home</a>
+          <a class="nav-link" aria-current="page" href="{{url_for('home')}}"> <i class="fa-solid fa-house"></i> Home</a>
         </li>
         
         <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="{{url_for('home')}}">Movie Reviews</a>
+          <a class="nav-link" aria-current="page" href="#reviews"><i class="fa-solid fa-star-half-stroke"></i> Reviews</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{url_for('watchlist')}}">Your WatchList</a>
+          <a class="nav-link" href="{{url_for('watchlist')}}"><i class="fa-solid fa-clipboard-list"></i> WatchList</a>
           
         </li>
         {% if  not current_user.is_authenticated: %}
         <li class="nav-item">
-          <a class="nav-link" aria-current="page" href="{{url_for('login')}}">Login</a>
+          <a class="nav-link" aria-current="page" href="{{url_for('login')}}"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{url_for('register')}}">Register</a>
+          <a class="nav-link" href="{{url_for('register')}}"><i class="fa-solid fa-right-to-bracket"></i> Register</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{url_for('logout')}}">Contact Us</a>
+          <a class="nav-link" href="{{url_for('contact')}}"><i class="fa-solid fa-address-book"></i> Contact Us</a>
         </li>
         {% else %}
 
         <li class="nav-item">
-          <a class="nav-link" href="{{url_for('logout')}}">Logout</a>
+          <a class="nav-link" href="{{url_for('logout')}}"><i class="fa-solid fa-right-to-bracket"></i>  Logout</a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link" href="{{url_for('logout')}}">Contact Us</a>
+          <a class="nav-link" href="{{url_for('contact')}}"><i class="fa-solid fa-address-book"></i> Contact Us</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{url_for('watchlist')}}">{{current_user.name}}</a>
+          <a class="nav-link" href="{{url_for('watchlist')}}"><i class="fa-solid fa-user"></i> {{current_user.name}}</a>
           
         </li>
 
@@ -65,15 +65,15 @@
         
         <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="true">
           <div class="carousel-inner">
-            <div class="carousel-item active" style="padding-left:10%;padding-right:10%;padding-bottom:4%;">
+            <div class="carousel-item active" style="padding-left:10%;padding-right:10%;">
               <div class="row" style="text-align:center;">
                 {%for popular in new_popular%}
-            <div class="col-lg-4 col-md-4 images" >
-              <img src="{{popular.image}}" style="height: 80%;">
-          <h6>Number of Episodes: {{popular.numberOfEpisodes}}</h6>
-            </div>
+                    <div class="col-lg-4 col-md-4 images" >
+                      <img src="{{popular.image}}" style="height: 80%;">
+                    <h6>Number of Episodes: {{popular.numberOfEpisodes}}</h6>
+                    </div>
             
-          {% endfor %}
+                {% endfor %}
               </div>
               
         
@@ -102,6 +102,7 @@
       
       </div>
       <div class="container small-screen" >
+        <h3 id="h3" style="margin-left:10px;"> Popular Tv shows This Month</h3>
         <div class="scroll">
       
           <div class="col-lg-4 col-md-4 imagez" >
@@ -115,22 +116,177 @@
       </div>
       </div>
 
-      <div class="container" style="text-align:center;">
-        <h5 >Your movies from your wishlist</h5>
+      
 
+     
 
-      </div>
-      <div class="container" style="text-align:center;">
-        <h5>Recent trailers</h5>
+      <div class="container big_screen2" style="text-align:center" >
+        <h3 id="h3" style="margin-left:100px;">Your Movies From Your WatchList</h3>
+        {% if  not current_user.is_authenticated: %}
+        <div class="col-lg-12 div_anonymous">
+          
+          <h6>Login or Register to Add Your Movies Here</h6>
+          <h5> <a class="login_anonymous" href="{{url_for('login')}}"><i class="fa-solid fa-right-to-bracket"></i> Login</a></h5>
+          <h4><a class="login_anonymous" href="{{url_for('register')}}"><i class="fa-solid fa-right-to-bracket"></i> Register</a>
+          </h4>
+        
+        </div>
+        {% endif %}
+        {% if current_user.is_authenticated: %}
+        <div id="carouselExampleIndicator" class="carousel slide" data-bs-ride="true">
+          <div class="carousel-inner">
+            <div class="carousel-item active" style="padding-left:10%;padding-right:10%;padding-bottom:4%;">
+              <div class="row" style="text-align:center;">
 
-      </div>
+                
+                {% for movie in first_three_movies %}
+                 
+           {% if movie.author_id == current_user.id %}
 
-      <div class="container" style="text-align:center;">
-        <h5>Donations</h5>
+                    <div class="col-lg-4 col-md-4" >
+                      <img  src="{{movie.img_url}}" class="card-img-top" alt="...">
+                    </div>
+                    {% endif %}
+            
+                {% endfor %}
+              </div>
+              
+        
+            </div>
+            <div class="carousel-item" style="padding-left:10%;padding-right:10% ;padding-bottom:4%;">
+              <div class="row">
+                {%for movie in last_three_movies%}
+                {% if movie.author_id == current_user.id %}
 
-      </div>
+            <div class="col-lg-4 col-md-4">
+              <img  src="{{movie.img_url}}" class="card-img-top" alt="...">
+          
+            </div>
+                {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicator" data-bs-slide="prev" >
+            <span class="carousel-control-prev-icon" aria-hidden="true" style="background-color:rgb(111, 13, 93);" ></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicator" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"  style="background-color:rgb(111, 13, 93);"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+        {% endif %}
 
       
+      </div>
+
+      <div class="container small-screen2">
+        <h3 id="h3" style="margin-left:10px;">Movies From Your WatchList</h3>
+        {% if  not current_user.is_authenticated: %}
+        <div class="col-lg-12 div_anonymous2">
+         
+          <h6>Login or Register to Add Your Movies Here</h6>
+          <h5> <a class="login_anonymous" href="{{url_for('login')}}"><i class="fa-solid fa-right-to-bracket"></i> Login</a></h5>
+          <h4><a class="login_anonymous" href="{{url_for('register')}}"><i class="fa-solid fa-right-to-bracket"></i> Register</a>
+          </h4>
+        
+        </div>
+        {% endif %}
+
+        <div class="scroll">
+      
+          <div class="col-lg-4 col-md-4 imagez" >
+            {%for movie in movies %}
+            {% if movie.author_id == current_user.id %}
+
+            <img src="{{movie.img_url}}" style="height: 50%;" class="scroll_image">
+            {%endif%}
+            {% endfor %}
+          </div>
+          </div>
+
+      </div>
+
+
+
+      <div class="container big_screen3">
+        <h3 id="h3" style="margin-left:100px;">Recent Trailers</h3>
+        
+            <div class="col-lg-12 div_trailers">
+              <div class="row">
+                <div class="embed-responsive embed-responsive-16by9 col-lg-4">
+                  <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe>
+                </div>
+                <div class="embed-responsive embed-responsive-16by9 col-lg-4">
+                  <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe>
+                </div>
+                <div class="embed-responsive embed-responsive-16by9 col-lg-4">
+                  <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe>
+                </div>
+              </div>
+              
+             
+            </div>
+      </div>
+      <div class="container small-screen3">
+        <h3 id="h3" style="margin-left:10px;">Recent Trailers</h3>
+        <div class="col-lg-12">
+          <div class="row">
+            <div class="embed-responsive embed-responsive-16by9 col-lg-4">
+              <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe>
+            </div>
+            <div class="embed-responsive embed-responsive-16by9 col-lg-4">
+              <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe>
+            </div>
+            <div class="embed-responsive embed-responsive-16by9 col-lg-4">
+              <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/zpOULjyy-n8?rel=0" allowfullscreen></iframe>
+            </div>
+          </div>
+          
+         
+        </div>
+      </div>
+
+
+      <div class="container big_screen4" id="reviews">
+        <div class="row div_trailers">
+          <h3 id="h3">Recent Reviews</h3>
+          {% for reviews in reviews %}
+            <div class="col-lg-3 col-md-12 col-sm-12">
+                <img class="card-img img" src="{{reviews.image}}">
+            </div>
+            <div class="col-lg-9 col-md-12 col-sm-12">
+                <div class="card-body">
+                    <h5 class="card-title">{{reviews.reviewTitle}}</h5>
+                    <p class="card-text">{{reviews.review_text|safe}}</p>
+                    <p>Author:{{reviews.author}}</p>
+                   </div>
+            </div>
+            <hr>
+              {% endfor %}
+        </div>
+    </div>
+    <div class="container small-screen4" id="reviews">
+      <div class="row">
+        <h3 id="h3" style="margin-left:10px;">Recent Reviews</h3>
+        {% for reviews in reviews %}
+          <div class="col-lg-3 col-md-12 col-sm-12" style="padding-bottom:1px;">
+              <img class="card-img img" src="{{reviews.image}}">
+          </div>
+          <div class="col-lg-9 col-md-12 col-sm-12">
+              <div class="card-body">
+                  <h5 class="card-title" >{{reviews.reviewTitle}}</h5>
+                  <p class="card-text">{{reviews.review_text|safe}}</p>
+                  <p>Author:{{reviews.author}}</p>
+                 </div>
+          </div>
+          <hr>
+            {% endfor %}
+      </div>
+  </div>
+
+   
       
     </div>
     <div class="col-lg-3"> 
